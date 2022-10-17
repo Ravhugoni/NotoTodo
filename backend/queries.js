@@ -1,3 +1,5 @@
+const config = require('./configaration')
+
 const Pool = require('pg').Pool
 const pool = new Pool({
   user: 'postgres',
@@ -9,7 +11,7 @@ const pool = new Pool({
 
 const getToDoList = (request, response) => {
 
-  pool.query('SELECT * FROM public."todolistTb" ORDER BY id ASC ', (error, results) => {
+  pool.query('SELECT * FROM public."todolisttb" ORDER BY id ASC ', (error, results) => {
     if (error) {
       throw error
     }
@@ -20,7 +22,7 @@ const getToDoList = (request, response) => {
 const getToDoListById = (request, response) => {
   const id = parseInt(request.params.id)
 
-  pool.query('SELECT * FROM todolistTb WHERE id = $1', [id], (error, results) => {
+  pool.query('SELECT * FROM public."todolisttb" WHERE id = $1', [id], (error, results) => {
     if (error) {
       throw error
     }
@@ -29,47 +31,64 @@ const getToDoListById = (request, response) => {
 }
 
 const createToDoList = (request, response) => {
-  const { name} = request.body
+  const { name, isComplete} = request.body
 
-  pool.query('INSERT INTO todolistTb (name) VALUES ($1)', [name], (error, results) => {
+  pool.query('INSERT INTO public."todolisttb" (name, "isComplete") VALUES ($1, $2)', [name, isComplete], (error, results) => {
     if (error) {
       throw error
     }
     response.status(201).send(`ToDoList added with ID: ${results.insertId}`)
   })
 }
-
+        
 const updateToDoList = (request, response) => {
   const id = parseInt(request.params.id)
-  const { name, email } = request.body
+  const { name } = request.body
 
   pool.query(
-    'UPDATE todolistTb SET name = $1 WHERE id = $2',
+    'UPDATE public."todolisttb" SET name = $1 WHERE id = $2',
     [name, id],
     (error, results) => {
       if (error) {
         throw error
       }
-      response.status(200).send(`todolistTb modified with ID: ${id}`)
+      response.status(200).send(`todolisttb modified with ID: ${id}`)
     }
   )
 }
 
+const completeToDoList = (request, response) => {
+    const id = parseInt(request.params.id)
+    const { name, isComplete } = request.body
+  
+    pool.query(
+      'UPDATE public."todolisttb" SET name = $1, "isComplete" = $2 WHERE id = $3',
+      [name, isComplete, id],
+      (error, results) => {
+        if (error) {
+          throw error
+        }
+        response.status(200).send(`todolisttb modified with ID: ${id}`)
+      }
+    )
+  }
+
 const deleteToDoList = (request, response) => {
   const id = parseInt(request.params.id)
 
-  pool.query('DELETE FROM todolistTb WHERE id = $1', [id], (error, results) => {
+  pool.query('DELETE FROM public.todolisttb WHERE id = $1', [id], (error, results) => {
     if (error) {
       throw error
     }
-    response.status(200).send(`todolistTb deleted with ID: ${id}`)
+    response.status(200).send(`todolisttb deleted with ID: ${id}`)
   })
 }
 
 module.exports = {
     getToDoList,
     getToDoListById,
-  createToDoList,
-  updateToDoList,
-  deleteToDoList,
+    createToDoList,
+    updateToDoList,
+    completeToDoList,
+    deleteToDoList, 
 }
